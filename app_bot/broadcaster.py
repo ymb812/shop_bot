@@ -55,13 +55,9 @@ class Broadcaster(object):
 
     @classmethod
     async def send_content_to_users(cls, bot: Bot, message: types.Message = None,
-                                    broadcaster_post: Post = None, museum_id: int = None):
+                                    broadcaster_post: Post = None):
         sent_amount = 0
-
-        if museum_id:
-            users_ids = await User.filter(museum_id=museum_id).all()
-        else:
-            users_ids = await User.all()
+        users_ids = await User.all()
         if not users_ids:
             return sent_amount
 
@@ -96,7 +92,7 @@ class Broadcaster(object):
             return
 
         # sending
-        await cls.send_content_to_users(bot=bot, broadcaster_post=post, museum_id=order.museum_id)
+        await cls.send_content_to_users(bot=bot, broadcaster_post=post)
 
         # delete order
         try:

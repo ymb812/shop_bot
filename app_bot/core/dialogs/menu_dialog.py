@@ -1,12 +1,12 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.text import Const, Format
-from aiogram_dialog.widgets.kbd import Column, Url, SwitchTo, Button
+from aiogram_dialog.widgets.kbd import Column, Url, SwitchTo, Button, Start
 from core.states.main_menu import MainMenuStateGroup
 from core.utils.texts import _
 from core.dialogs.callbacks import CallBackHandler
-from core.dialogs.getters import get_bot_data
-from settings import settings
+from core.states.catalog import CatalogStateGroup
+from core.states.cart import CartStateGroup
+from core.states.support import SupportStateGroup
 
 
 main_menu_dialog = Dialog(
@@ -14,26 +14,13 @@ main_menu_dialog = Dialog(
     Window(
         Const(text=_('PICK_ACTION')),
         Column(
-            Button(Const(text=_('REPORT_BUTTON')), id='go_to_report', on_click=CallBackHandler.start_checking),
-            SwitchTo(Const(text=_('EXHIBIT_BUTTON')), id='go_to_exhibit', state=MainMenuStateGroup.exhibit),
-            Url(
-                Const(text=_('SUPPORT_BUTTON')),
-                Const(text=settings.admin_chat_link),
-            )
+            Start(Const(text=_('ORDER_BUTTON')), id='go_to_new_order', state=CatalogStateGroup.categories),
+            Start(Const(text=_('MY_PRODUCTS_BUTTON')), id='go_to_my_products', state=CartStateGroup.products),
+            Button(Const(text=_('FAQ_BUTTON')), id='faq', on_click=CallBackHandler.main_menu_buttons_handler),
+            Button(Const(text=_('ABOUT_BUTTON')), id='about', on_click=CallBackHandler.main_menu_buttons_handler),
+            Button(Const(text=_('CONTACTS_BUTTON')), id='contacts', on_click=CallBackHandler.main_menu_buttons_handler),
+            Start(Const(text=_('SUPPORT_BUTTON')), id='go_to_support', state=SupportStateGroup.menu),
         ),
         state=MainMenuStateGroup.menu,
-    ),
-
-    # exhibit input
-    Window(
-        Format(text=_('INPUT_EXHIBIT', bot_username='{bot_username}')),
-        TextInput(
-            id='input_exhibit',
-            type_factory=int,
-            on_success=CallBackHandler.entered_exhibit_id
-        ),
-        SwitchTo(Const(text=_('BACK_BUTTON')), id='go_to_menu', state=MainMenuStateGroup.menu),
-        getter=get_bot_data,
-        state=MainMenuStateGroup.exhibit
     ),
 )

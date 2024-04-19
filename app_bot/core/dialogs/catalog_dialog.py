@@ -5,70 +5,82 @@ from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.kbd import PrevPage, NextPage, CurrentPage, Start, Column, StubScroll, Button, Row, \
     FirstPage, LastPage, SwitchTo, Select
 from aiogram_dialog.widgets.input import TextInput
-from core.dialogs.getters import get_exhibits_by_museum
+from core.dialogs.getters import get_products_by_category, get_categories
 from core.dialogs.callbacks import CallBackHandler
+from core.dialogs.custom_content import CustomPager
 from core.states.main_menu import MainMenuStateGroup
 from core.states.catalog import CatalogStateGroup
+from core.states.cart import CartStateGroup
 from core.utils.texts import _
+from settings import settings
 
-
-statuses_select = Select(
-    id='_status_select',
-    items='statuses',
-    item_id_getter=lambda item: item.name,
-    text=Format(text='{item.value}'),
-    on_click=CallBackHandler.selected_status,
-)
 
 catalog_dialog = Dialog(
-    # exhibits
+    # categories
+    Window(
+        Const(text=_('PICK_CATEGORY')),
+        CustomPager(
+            Select(
+                id='_category_select',
+                items='categories',
+                item_id_getter=lambda item: item.id,
+                text=Format(text='{item.name}'),
+                on_click=CallBackHandler.selected_product,
+            ),
+            id='categories_group',
+            height=settings.categories_per_page_height,
+            width=settings.categories_per_page_width,
+            hide_on_single_page=True,
+        ),
+        Start(Const(text=_('BACK_BUTTON')), id='go_to_menu', state=MainMenuStateGroup.menu),
+        getter=get_categories,
+        state=CatalogStateGroup.categories,
+    ),
+
+
+    # products
     Window(
         DynamicMedia(selector='media_content'),
         Format(text='{name}'),
-        StubScroll(id='exhibit_scroll', pages='pages'),
+        StubScroll(id='product_scroll', pages='pages'),
 
         # cycle pager
         Row(
-            LastPage(scroll='exhibit_scroll', text=Const('<'), when=F['current_page'] == 0),
-            PrevPage(scroll='exhibit_scroll', when=F['current_page'] != 0),
-            CurrentPage(scroll='exhibit_scroll'),
-            NextPage(scroll='exhibit_scroll', when=F['current_page'] != F['pages'] - 1),
-            FirstPage(scroll='exhibit_scroll', text=Const('>'), when=F['current_page'] == F['pages'] - 1),
+            LastPage(scroll='product_scroll', text=Const('<'), when=F['current_page'] == 0),
+            PrevPage(scroll='product_scroll', when=F['current_page'] != 0),
+            CurrentPage(scroll='product_scroll'),
+            NextPage(scroll='product_scroll', when=F['current_page'] != F['pages'] - 1),
+            FirstPage(scroll='product_scroll', text=Const('>'), when=F['current_page'] == F['pages'] - 1),
             when=F['pages'] > 1,
         ),
 
         Column(
-            statuses_select,
-            Start(Const(text=_('BACK_BUTTON')), id='go_to_menu', state=MainMenuStateGroup.menu)
+            SwitchTo(Const(text=_('PICK_BUTTON')), id='go_to_amount', state=CatalogStateGroup.product_amount),
+            SwitchTo(Const(text=_('BACK_BUTTON')), id='go_to_categories', state=CatalogStateGroup.categories),
         ),
-        getter=get_exhibits_by_museum,
-        state=CatalogStateGroup.status,
+        getter=get_products_by_category,
+        state=CatalogStateGroup.product_interaction,
     ),
 
-    # problem input
+    # input amount
     Window(
-        Const(text=_('INPUT_PROBLEM')),
+        Const(text=_('INPUT_AMOUNT')),
         TextInput(
-            id='input_problem',
+            id='product_amount',
             type_factory=str,
-            on_success=CallBackHandler.entered_problem
+            on_success=CallBackHandler.entered_product_amount
         ),
-        SwitchTo(Const(text=_('BACK_BUTTON')), id='go_to_catalog', state=CatalogStateGroup.status,
-                 when=~F.get('start_data').get('inline_mode')),
-        SwitchTo(Const(text=_('BACK_BUTTON')), id='go_to_exhibit_page', state=CatalogStateGroup.exhibit,
-                 when=F.get('start_data').get('inline_mode')),
-        state=CatalogStateGroup.problem
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='go_to_product', state=CatalogStateGroup.product_interaction),
+        state=CatalogStateGroup.product_amount,
     ),
 
-    # exhibit from inline
+    # add or leave
     Window(
-        DynamicMedia(selector='media_content'),
-        Format(text='{name}'),
+        Const(text=_('PICK_ACTION')),
         Column(
-            statuses_select,
-            Start(Const(text=_('BACK_BUTTON')), id='go_to_inline', state=MainMenuStateGroup.exhibit)
+            SwitchTo(Const(text=_('ADD_MORE_BUTTON')), id='go_to_categories', state=CatalogStateGroup.categories),
+            Start(Const(text=_('MY_PRODUCTS_BUTTON')), id='go_to_my_products', state=CartStateGroup.products),
         ),
-        getter=get_exhibits_by_museum,
-        state=CatalogStateGroup.exhibit
+        state=CatalogStateGroup.add_or_leave
     ),
 )
