@@ -2,6 +2,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 
 class CatalogStateGroup(StatesGroup):
-    status = State()
-    problem = State()
-    exhibit = State()
+    categories = State()
+    product_interaction = State()
+    product_amount = State()
+    add_or_leave = State()

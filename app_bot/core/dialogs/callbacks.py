@@ -1,13 +1,16 @@
 import logging
+import uuid
 from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.common import ManagedScroll
 from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.kbd import Select, Button
 from core.states.catalog import CatalogStateGroup
+from core.states.cart import CartStateGroup
 from core.states.main_menu import MainMenuStateGroup
-from core.database.models import Report, ReportSession, User
-from core.excel.excel_generator import create_excel_after_checking
+from core.database.models import User, Product, UserProduct, Order
+from core.utils.texts import _
+from settings import settings
 
 
 logger = logging.getLogger(__name__)
@@ -17,121 +20,193 @@ async def switch_page(dialog_manager: DialogManager, scroll_id: str, message: Me
     # switch page
     scroll: ManagedScroll = dialog_manager.find(scroll_id)
     current_page = await scroll.get_page()
-    session_id = dialog_manager.start_data.get('session_id')  # to indentify exhibits checks
 
     if current_page == dialog_manager.dialog_data['pages'] - 1:
-        # go back to the menu
-        await message.answer(text='Осмотр завершен, спасибо!')
-        await dialog_manager.start(MainMenuStateGroup.menu)
-
-        # send reports file to users
-        reports_receivers = await User.filter(is_reports_receiver=True).all()
-        reports_by_session = await Report.filter(session_id=session_id).all()
-
-        try:
-            file_in_memory, is_empty = await create_excel_after_checking(reports=reports_by_session)
-        except Exception as e:
-            logger.info(f'Error in creating file after checking', exc_info=e)
-
-        try:
-            if not is_empty:  # send file if there are any reports
-                file = file_in_memory.read()
-                for user in reports_receivers:
-                    await dialog_manager.event.bot.send_document(
-                        chat_id=user.user_id,
-                        document=BufferedInputFile(file=file, filename='Отчеты.xlsx'),
-                    )
-        except Exception as e:
-            logger.info(f'Error in sending file after checking', exc_info=e)
-
-        return
-
+        next_page = 0
     else:
         next_page = current_page + 1
-
     await scroll.set_page(next_page)
 
 
-class CallBackHandler:
+def get_username_or_link(user: User):
+    if user.username:
+        user_username = f'@{user.username}'
+    else:
+        user_username = f'<a href="tg://user?id={user.user_id}">ссылка</a>'
+
+    return user_username
+
+
+class ProductsCallbackHandler:
     @classmethod
-    async def start_checking(
+    async def main_menu_buttons_handler(
             cls,
             callback: CallbackQuery,
             widget: Button,
             dialog_manager: DialogManager,
     ):
-        # create new session
-        session = await ReportSession.create(creator_id=callback.from_user.id)
-        await dialog_manager.start(state=CatalogStateGroup.status, data={'session_id': session.id})
+        if callback.data == 'faq':
+            await callback.message.answer(text=_('FAQ'))
+        elif callback.data == 'about':
+            await callback.message.answer(text=_('ABOUT'))
+        elif callback.data == 'contacts':
+            await callback.message.answer(text=_('CONTACTS'))
 
 
     @classmethod
-    async def selected_status(
+    async def selected_category(
             cls,
             callback: CallbackQuery,
             widget: Select,
             dialog_manager: DialogManager,
             item_id: str,
     ):
+        dialog_manager.dialog_data['category_id'] = item_id
+        await dialog_manager.switch_to(CatalogStateGroup.product_interaction)
 
-        status = dialog_manager.dialog_data['statuses_dict'][item_id]
-        dialog_manager.dialog_data['status'] = status
 
-        # go to next page if 'work'
-        if item_id == 'work':
-            # create report
-            await Report.create(
-                status=dialog_manager.dialog_data['status'],
-                exhibit_id=dialog_manager.dialog_data['current_exhibit_id'],
-                museum_id=dialog_manager.dialog_data['museum_id'],
-                creator_id=callback.from_user.id,
-                session_id=dialog_manager.start_data.get('session_id'),
+    @staticmethod
+    async def entered_product_amount(
+            message: Message,
+            widget: ManagedTextInput,
+            dialog_manager: DialogManager,
+            value,
+    ):
+        value: str
+        if value.isdigit():
+            # add product to cart
+            await UserProduct.add_or_update_product_to_the_cart(
+                product_id=dialog_manager.dialog_data['current_product_id'],
+                user_id=message.from_user.id,
+                amount=int(value),
             )
 
-            if dialog_manager.start_data and dialog_manager.start_data.get('inline_mode'):  # go back to inline
-                await dialog_manager.start(MainMenuStateGroup.exhibit)
-                return
-
-            # switch page
-            await switch_page(dialog_manager=dialog_manager, scroll_id='exhibit_scroll', message=callback.message)
-
-        else:
-            await dialog_manager.switch_to(CatalogStateGroup.problem)
+            await dialog_manager.switch_to(state=CatalogStateGroup.add_or_leave)
 
 
+    @classmethod
+    async def selected_product(
+            cls,
+            callback: CallbackQuery,
+            widget: Select,
+            dialog_manager: DialogManager,
+            item_id: str,
+    ):
+        dialog_manager.dialog_data['product_id'] = item_id
+        await dialog_manager.switch_to(CartStateGroup.product_interaction)
+
+
+    @classmethod
+    async def delete_from_cart(
+            cls,
+            callback: CallbackQuery,
+            widget: Button,
+            dialog_manager: DialogManager,
+    ):
+        # delete data from db
+        await UserProduct.filter(
+            product_id=dialog_manager.dialog_data['product_id'],
+            user_id=callback.from_user.id,
+        ).delete()
+
+        await dialog_manager.switch_to(CartStateGroup.products)
+
+
+    # handle 3 inputs from cart for order data
     @staticmethod
-    async def entered_problem(
+    async def input_order_data(
             message: Message,
             widget: ManagedTextInput,
             dialog_manager: DialogManager,
-            value: str,
+            value,
     ):
-        dialog_manager.dialog_data['problem'] = value
+        if widget.widget.widget_id == 'input_fio':
+            dialog_manager.dialog_data['fio'] = value
+            await dialog_manager.switch_to(CartStateGroup.input_phone)
 
-        # create report
-        await Report.create(
-            status=dialog_manager.dialog_data['status'],
-            description=value.strip(),
-            exhibit_id=dialog_manager.dialog_data['current_exhibit_id'],
-            museum_id=dialog_manager.dialog_data['museum_id'],
-            creator_id=message.from_user.id,
-            session_id=dialog_manager.start_data.get('session_id'),
+        elif widget.widget.widget_id == 'input_phone':
+            dialog_manager.dialog_data['phone'] = value
+            await dialog_manager.switch_to(CartStateGroup.input_address)
+
+        elif widget.widget.widget_id == 'input_address':
+            dialog_manager.dialog_data['address'] = value
+            await dialog_manager.switch_to(CartStateGroup.confirm)
+
+
+    # send new order to managers
+    @staticmethod
+    async def create_order(
+            callback: CallbackQuery,
+            widget: Button,
+            dialog_manager: DialogManager,
+    ):
+        order = await Order.create(
+            id=uuid.uuid4(),
+            user_id=callback.from_user.id,
+            is_paid=False,
+            price=dialog_manager.dialog_data['total_price'],
+            product_amount=dialog_manager.dialog_data['product_amount'],
+            address=dialog_manager.dialog_data['address'],
+        )
+        products = await UserProduct.add_cart_to_order(user_id=callback.from_user.id, order_id=order.id)
+
+        # save fio, phone, address to User
+        user: User = await order.user
+        user.fio = dialog_manager.dialog_data['fio']
+        user.phone = dialog_manager.dialog_data['phone']
+        user.address = dialog_manager.dialog_data['address']
+        await user.save()
+
+        # send info to user and to the managers chat
+        await dialog_manager.event.bot.send_message(
+            chat_id=settings.managers_chat_id,
+            text=_(
+                text='ORDER_DATA_FOR_MANAGERS',
+                order_id=order.id,
+                username=get_username_or_link(user=user),
+                products=products,
+                product_amount=order.product_amount,
+                total_price=order.price,
+                fio=dialog_manager.dialog_data['fio'],
+                phone=dialog_manager.dialog_data['phone'],
+                address=dialog_manager.dialog_data['address'],
+            ),
+        )
+        await callback.message.answer(text=_('ORDER_IS_CREATED', order_id=order.id))
+        await dialog_manager.start(MainMenuStateGroup.menu)
+
+
+class SupportCallbackHandler:
+    @classmethod
+    async def menu_buttons_handler(
+            cls,
+            callback: CallbackQuery,
+            widget: Button,
+            dialog_manager: DialogManager,
+    ):
+        if callback.data == 'go_to_manager':
+            await callback.message.answer(text=_('MANAGER_ACCOUNT', manager_link=settings.manager_link))
+        elif callback.data == 'about':
+            await callback.message.answer(text=_('ABOUT'))
+
+
+    # send new support request to managers
+    @staticmethod
+    async def input_phone(
+            message: Message,
+            widget: ManagedTextInput,
+            dialog_manager: DialogManager,
+            value,
+    ):
+        user = await User.get(user_id=message.from_user.id)
+        await dialog_manager.event.bot.send_message(
+            chat_id=settings.managers_chat_id,
+            text=_(
+                text='SUPPORT_REQUEST_FOR_MANAGERS',
+                username=get_username_or_link(user=user),
+                phone=value,
+            ),
         )
 
-        if dialog_manager.start_data and dialog_manager.start_data.get('inline_mode'):
-            await dialog_manager.start(MainMenuStateGroup.exhibit)  # go back to inline
-        else:
-            await dialog_manager.switch_to(state=CatalogStateGroup.status)  # go back to the catalog
-
-            # switch page
-            await switch_page(dialog_manager=dialog_manager, scroll_id='exhibit_scroll', message=message)
-
-
-    @staticmethod
-    async def entered_exhibit_id(
-            message: Message,
-            widget: ManagedTextInput,
-            dialog_manager: DialogManager,
-            value: int,
-    ):
-        await dialog_manager.start(CatalogStateGroup.exhibit, data={'inline_mode': True, 'exhibit_id': value})
+        await message.answer(text=_('FEED_BACK_INFO'))
+        await dialog_manager.start(MainMenuStateGroup.menu)

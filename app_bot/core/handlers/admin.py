@@ -1,19 +1,29 @@
 import json
 import logging
+import asyncio
 from aiogram import types, Router, F, Bot
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from broadcaster import Broadcaster
-from core.database.models import User, Report, Museum
+from core.database.models import User
 from core.keyboards.inline import mailing_kb
 from core.states.mailing import MailingStateGroup
 from core.utils.texts import _, set_admin_commands
-from core.excel.excel_generator import create_main_reports_excel
 from settings import settings
 
 
 logger = logging.getLogger(__name__)
 router = Router(name='Admin commands router')
+
+
+# ez to get id while developing
+@router.channel_post(Command(commands=['init']))
+@router.message(Command(commands=['init']))
+async def init_for_id(message: types.Message):
+    await message.delete()
+    msg = await message.answer(text=f'<code>{message.chat.id}</code>')
+    await asyncio.sleep(2)
+    await msg.delete()
 
 
 # admin login
@@ -58,24 +68,6 @@ async def admin_team_approve_handler(callback: types.CallbackQuery, bot: Bot, st
     await state.clear()
 
     await callback.message.answer(text=_('MAILING_IS_COMPLETED', users_amount=users_amount, sent_amount=sent_amount))
-
-
-@router.message(Command(commands=['stats']))
-async def excel_stats(message: types.Message):
-    # cuz command is only for 'admin'
-    user = await User.get(user_id=message.from_user.id)
-    if user.status != 'admin':
-        return
-
-    # get reports for each museum
-    museums = await Museum.all()
-    for museum in museums:
-        reports = await Report.filter(museum_id=museum.id).all()
-        if reports:
-            file_in_memory = await create_main_reports_excel(reports=reports)
-            await message.answer_document(
-                document=types.BufferedInputFile(file_in_memory.read(), filename=f'Отчет по {museum.name}.xlsx'),
-            )
 
 
 # get file_id for broadcaster

@@ -14,40 +14,29 @@ router = Router(name='Start router')
 
 
 @router.message(Command(commands=['start']), StateFilter(None))
-async def start_handler(message: types.Message, bot: Bot, state: FSMContext, dialog_manager: DialogManager,
-                        command: CommandObject):
-    user = await User.get_or_none(user_id=message.from_user.id)
-    if not command.args and not user:  # ignore start w/o link from non-users
-        return
-
-    if command.args == settings.admin_password.get_secret_value():
-        # add admin
-        await state.clear()
-        await message.answer(text=_('NEW_ADMIN_TEXT'))
-
-        await User.update_admin_data(user_id=message.from_user.id, username=message.from_user.username, status='admin')
-        await set_admin_commands(bot=bot, scope=types.BotCommandScopeChat(chat_id=message.from_user.id))
-        return
-
-    elif command.args:
-        # add worker
-        link = settings.bot_link + command.args
-        user = await User.get_or_none(link=link)
-        if not user:  # ignore start w/o link from non-users
-            return
-
-        # save tg data and delete link
-        user.user_id = message.from_user.id
-        user.username = message.from_user.username
-        user.link = None
-        await user.save()
-
-
+async def start_handler(
+        message: types.Message,
+        bot: Bot,
+        state: FSMContext,
+        dialog_manager: DialogManager,
+        command: CommandObject,
+):
     await state.clear()
-    if user.status == 'admin':
-        await set_admin_commands(bot=bot, scope=types.BotCommandScopeChat(chat_id=message.from_user.id))
-    else:
-        await set_user_commands(bot=bot, scope=types.BotCommandScopeChat(chat_id=message.from_user.id))
+    try:
+        await dialog_manager.reset_stack()
+    except:
+        pass
+
+    # add basic info to db
+    await User.update_data(
+        user_id=message.from_user.id,
+        username=message.from_user.username,
+    )
+
+    await set_user_commands(bot=bot, scope=types.BotCommandScopeChat(chat_id=message.from_user.id))
+    await message.answer(
+        text=_('WELCOME_MSG'),
+    )
 
     # send main menu
     await dialog_manager.start(state=MainMenuStateGroup.menu, mode=StartMode.RESET_STACK)
