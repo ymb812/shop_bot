@@ -7,4 +7,5 @@ class CartStateGroup(StatesGroup):
     input_fio = State()
     input_phone = State()
     input_address = State()
+    confirm = State()
 

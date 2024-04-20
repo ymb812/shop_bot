@@ -25,7 +25,7 @@ catalog_dialog = Dialog(
                 items='categories',
                 item_id_getter=lambda item: item.id,
                 text=Format(text='{item.name}'),
-                on_click=CallBackHandler.selected_product,
+                on_click=CallBackHandler.selected_category,
             ),
             id='categories_group',
             height=settings.categories_per_page_height,
@@ -41,7 +41,12 @@ catalog_dialog = Dialog(
     # products
     Window(
         DynamicMedia(selector='media_content'),
-        Format(text='{name}'),
+        Format(text=_(
+            text='PRODUCT_PAGE',
+            name='{product.name}',
+            description='{product.description}',
+            price='{product.price}',
+        )),
         StubScroll(id='product_scroll', pages='pages'),
 
         # cycle pager

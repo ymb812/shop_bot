@@ -82,7 +82,7 @@ class Order(models.Model):
         verbose_name_plural = verbose_name
 
     id = models.UUIDField(primary_key=True, db_index=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('User', to_field='user_id', on_delete=models.CASCADE)
     is_paid = models.BooleanField(default=False)
     price = models.IntegerField()
     product_amount = models.IntegerField()
