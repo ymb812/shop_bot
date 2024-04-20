@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.kbd import Start, Button, Select, SwitchTo
 from aiogram_dialog.widgets.input import TextInput
 from core.dialogs.custom_content import CustomPager
 from core.dialogs.getters import get_products_by_user, get_product_data, get_order_data
-from core.dialogs.callbacks import CallBackHandler
+from core.dialogs.callbacks import ProductsCallbackHandler
 from core.states.cart import CartStateGroup
 from core.states.main_menu import MainMenuStateGroup
 from core.utils.texts import _
@@ -24,7 +24,7 @@ cart_dialog = Dialog(
                 items='products',
                 item_id_getter=lambda item: item.id,
                 text=Format(text='{item.name}'),
-                on_click=CallBackHandler.selected_product,
+                on_click=ProductsCallbackHandler.selected_product,
             ),
             id='products_by_cart_group',
             height=settings.categories_per_page_height,
@@ -48,7 +48,7 @@ cart_dialog = Dialog(
             description='{product.description}',
             price='{product.price}',
         )),
-        Button(Const(text=_('DELETE_BUTTON')), id='delete_from_cart', on_click=CallBackHandler.delete_from_cart),
+        Button(Const(text=_('DELETE_BUTTON')), id='delete_from_cart', on_click=ProductsCallbackHandler.delete_from_cart),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_cart', state=CartStateGroup.products),
         getter=get_product_data,
         state=CartStateGroup.product_interaction,
@@ -61,7 +61,7 @@ cart_dialog = Dialog(
         TextInput(
             id='input_fio',
             type_factory=str,
-            on_success=CallBackHandler.input_order_data
+            on_success=ProductsCallbackHandler.input_order_data
         ),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_products', state=CartStateGroup.products),
         state=CartStateGroup.input_fio,
@@ -74,7 +74,7 @@ cart_dialog = Dialog(
         TextInput(
             id='input_phone',
             type_factory=str,
-            on_success=CallBackHandler.input_order_data
+            on_success=ProductsCallbackHandler.input_order_data
         ),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_fio', state=CartStateGroup.input_fio),
         state=CartStateGroup.input_phone,
@@ -87,7 +87,7 @@ cart_dialog = Dialog(
         TextInput(
             id='input_address',
             type_factory=str,
-            on_success=CallBackHandler.input_order_data
+            on_success=ProductsCallbackHandler.input_order_data
         ),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_phone', state=CartStateGroup.input_phone),
         state=CartStateGroup.input_address,
@@ -101,7 +101,7 @@ cart_dialog = Dialog(
                       product_amount='{product_amount}',
                       total_price='{total_price}')
                ),
-        Button(Const(text=_('CONFIRM_BUTTON')), id='create_order', on_click=CallBackHandler.create_order),
+        Button(Const(text=_('CONFIRM_BUTTON')), id='create_order', on_click=ProductsCallbackHandler.create_order),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_address', state=CartStateGroup.input_address),
         getter=get_order_data,
         state=CartStateGroup.confirm,

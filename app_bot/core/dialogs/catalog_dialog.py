@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.kbd import PrevPage, NextPage, CurrentPage, Start, C
     FirstPage, LastPage, SwitchTo, Select
 from aiogram_dialog.widgets.input import TextInput
 from core.dialogs.getters import get_products_by_category, get_categories
-from core.dialogs.callbacks import CallBackHandler
+from core.dialogs.callbacks import ProductsCallbackHandler
 from core.dialogs.custom_content import CustomPager
 from core.states.main_menu import MainMenuStateGroup
 from core.states.catalog import CatalogStateGroup
@@ -25,7 +25,7 @@ catalog_dialog = Dialog(
                 items='categories',
                 item_id_getter=lambda item: item.id,
                 text=Format(text='{item.name}'),
-                on_click=CallBackHandler.selected_category,
+                on_click=ProductsCallbackHandler.selected_category,
             ),
             id='categories_group',
             height=settings.categories_per_page_height,
@@ -73,7 +73,7 @@ catalog_dialog = Dialog(
         TextInput(
             id='product_amount',
             type_factory=str,
-            on_success=CallBackHandler.entered_product_amount
+            on_success=ProductsCallbackHandler.entered_product_amount
         ),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='go_to_product', state=CatalogStateGroup.product_interaction),
         state=CatalogStateGroup.product_amount,

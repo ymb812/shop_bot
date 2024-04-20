@@ -37,7 +37,7 @@ def get_username_or_link(user: User):
     return user_username
 
 
-class CallBackHandler:
+class ProductsCallbackHandler:
     @classmethod
     async def main_menu_buttons_handler(
             cls,
@@ -133,6 +133,7 @@ class CallBackHandler:
             await dialog_manager.switch_to(CartStateGroup.confirm)
 
 
+    # send new order to managers
     @staticmethod
     async def create_order(
             callback: CallbackQuery,
@@ -151,9 +152,10 @@ class CallBackHandler:
 
         # send info to user and to the managers chat
         await dialog_manager.event.bot.send_message(
-            chat_id=settings.admin_chat_id,
+            chat_id=settings.managers_chat_id,
             text=_(
                 text='ORDER_DATA_FOR_MANAGERS',
+                order_id=order.id,
                 username=get_username_or_link(user=await order.user),
                 products=products,
                 product_amount=order.product_amount,
@@ -162,4 +164,40 @@ class CallBackHandler:
         )
         await callback.message.answer(text=_('ORDER_IS_CREATED', order_id=order.id))
 
+        await dialog_manager.start(MainMenuStateGroup.menu)
+
+
+class SupportCallbackHandler:
+    @classmethod
+    async def menu_buttons_handler(
+            cls,
+            callback: CallbackQuery,
+            widget: Button,
+            dialog_manager: DialogManager,
+    ):
+        if callback.data == 'go_to_manager':
+            await callback.message.answer(text=_('MANAGER_ACCOUNT', manager_link=settings.manager_link))
+        elif callback.data == 'about':
+            await callback.message.answer(text=_('ABOUT'))
+
+
+    # send new support request to managers
+    @staticmethod
+    async def input_phone(
+            message: Message,
+            widget: ManagedTextInput,
+            dialog_manager: DialogManager,
+            value,
+    ):
+        user = await User.get(user_id=message.from_user.id)
+        await dialog_manager.event.bot.send_message(
+            chat_id=settings.managers_chat_id,
+            text=_(
+                text='SUPPORT_REQUEST_FOR_MANAGERS',
+                username=get_username_or_link(user=user),
+                phone=value,
+            ),
+        )
+
+        await message.answer(text=_('FEED_BACK_INFO'))
         await dialog_manager.start(MainMenuStateGroup.menu)

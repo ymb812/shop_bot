@@ -90,6 +90,14 @@ msgid "CONFIRM_BUTTON"
 msgstr "✅ Подтвердить"
 
 
+msgid "WRITE_BUTTON"
+msgstr "Написать"
+
+
+msgid "FEED_BACK_BUTTON"
+msgstr "Обратная связь в один клик"
+
+
 msgid "BACK_BUTTON"
 msgstr "🔙  Назад"
 
@@ -132,6 +140,18 @@ msgid "CONFIRM_MAILING"
 msgstr "Запустить рассылку всем пользователям?\n\n"
 
 "<i>/cancel для отмены</i>"
+
+
+msgid "FAQ"
+msgstr "Здесь будет FAQ"
+
+
+msgid "ABOUT"
+msgstr "Здесь будет информация о боте"
+
+
+msgid "CONTACTS"
+msgstr "Здесь будут контакты"
 
 
 msgid "PICK_ACTION"
@@ -182,6 +202,10 @@ msgid "CART_IS_EMPTY"
 msgstr "Корзина пуста. Нажмите на "📋 Сделать заказ" в меню, чтобы добавить товары"
 
 
+msgid "FEED_BACK_INFO"
+msgstr "С вами свяжутся в ближайшее время"
+
+
 # format
 msgid "MAILING_HAS_BEEN_STARTED"
 msgstr "ℹ️ Рассылка запущена администратором @{admin_username}"
@@ -213,9 +237,18 @@ msgstr "Заказ <code>{order_id}</code> успешно создан и отп
 
 
 msgid "ORDER_DATA_FOR_MANAGERS"
-msgstr "<b>Новый заказ от пользователя {username}</b>\n\n"
+msgstr "<b>Новый заказ <code>{order_id}</code> от пользователя {username}</b>\n\n"
 
 "{products}"
 
 "Количество товаров: {product_amount}\n"
 "Итоговая цена: {total_price}р"
+
+
+msgid "SUPPORT_REQUEST_FOR_MANAGERS"
+msgstr "<b>Новый запрос на поддержку от пользователя {username}</b>\n\n"
+"Телефон пользователя: <code>{phone}</code>"
+
+
+msgid "MANAGER_ACCOUNT"
+msgstr "Напишите менеджеру {manager_link}"
