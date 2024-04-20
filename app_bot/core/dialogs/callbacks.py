@@ -150,20 +150,29 @@ class ProductsCallbackHandler:
         )
         products = await UserProduct.add_cart_to_order(user_id=callback.from_user.id, order_id=order.id)
 
+        # save fio, phone, address to User
+        user: User = await order.user
+        user.fio = dialog_manager.dialog_data['fio']
+        user.phone = dialog_manager.dialog_data['phone']
+        user.address = dialog_manager.dialog_data['address']
+        await user.save()
+
         # send info to user and to the managers chat
         await dialog_manager.event.bot.send_message(
             chat_id=settings.managers_chat_id,
             text=_(
                 text='ORDER_DATA_FOR_MANAGERS',
                 order_id=order.id,
-                username=get_username_or_link(user=await order.user),
+                username=get_username_or_link(user=user),
                 products=products,
                 product_amount=order.product_amount,
                 total_price=order.price,
+                fio=dialog_manager.dialog_data['fio'],
+                phone=dialog_manager.dialog_data['phone'],
+                address=dialog_manager.dialog_data['address'],
             ),
         )
         await callback.message.answer(text=_('ORDER_IS_CREATED', order_id=order.id))
-
         await dialog_manager.start(MainMenuStateGroup.menu)
 
 

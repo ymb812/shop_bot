@@ -43,10 +43,11 @@ cart_dialog = Dialog(
     Window(
         DynamicMedia(selector='media_content'),
         Format(text=_(
-            text='PRODUCT_PAGE',
+            text='PRODUCT_CART_PAGE',
             name='{product.name}',
             description='{product.description}',
             price='{product.price}',
+            amount='{product_amount}',
         )),
         Button(Const(text=_('DELETE_BUTTON')), id='delete_from_cart', on_click=ProductsCallbackHandler.delete_from_cart),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_cart', state=CartStateGroup.products),

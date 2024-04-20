@@ -220,7 +220,15 @@ msgstr "ℹ️ Рассылка завершена\n\n"
 
 msgid "PRODUCT_PAGE"
 msgstr "<b>{name}</b>\n"
-"<b>Цена: {price}р</b>\n\n"
+"<b>Цена:</b> {price}р\n\n"
+"{description}"
+
+
+msgid "PRODUCT_CART_PAGE"
+msgstr "<b>{name}</b>\n\n"
+"Цена за штуку: {price}р\n"
+"Количество: {amount}\n\n"
+
 "{description}"
 
 
@@ -238,6 +246,10 @@ msgstr "Заказ <code>{order_id}</code> успешно создан и отп
 
 msgid "ORDER_DATA_FOR_MANAGERS"
 msgstr "<b>Новый заказ <code>{order_id}</code> от пользователя {username}</b>\n\n"
+
+"ФИО: {fio}\n"
+"Телефон: {phone}\n"
+"Адрес: {address}\n\n"
 
 "{products}"
 

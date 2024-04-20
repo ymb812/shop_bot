@@ -73,17 +73,15 @@ async def get_products_by_user(**kwargs) -> dict[str, list[UserProduct]]:
 
 
 async def get_product_data(dialog_manager: DialogManager, **kwargs) -> dict[str, Product | MediaAttachment | int]:
-    data = dialog_manager.dialog_data
-    product = await Product.get(id=data['product_id'])
+    product = await Product.get(id=dialog_manager.dialog_data['product_id'])
 
     media_content = None
     if product.media_content:
         media_content = MediaAttachment(ContentType.PHOTO, url=product.media_content)
 
-    # handle confirm
-    product_amount = 0
-    if data.get('product_amount'):
-        product_amount = int(data['product_amount'])
+    product_amount = (await UserProduct.get_or_none(
+        user_id=dialog_manager.event.from_user.id, product_id=product.id, order_id=None,
+    )).amount
 
     return {
         'product': product,
