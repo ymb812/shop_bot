@@ -29,7 +29,12 @@ async def get_products_by_category(dialog_manager: DialogManager, **kwargs) -> d
     products = await Product.filter(category_id=category_id).all()
     if not products:
         raise ValueError
-    current_product = products[current_page]
+    try:
+        current_product = products[current_page]
+    except IndexError:  # when 'back_button' - bypass list index out of range
+        current_page = 0
+        current_product = products[0]
+
 
     # product data for page
     product_data = await get_product_info_data(product=current_product)

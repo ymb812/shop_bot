@@ -53,7 +53,7 @@ catalog_dialog = Dialog(
         Row(
             LastPage(scroll='product_scroll', text=Const('<'), when=F['current_page'] == 0),
             PrevPage(scroll='product_scroll', when=F['current_page'] != 0),
-            CurrentPage(scroll='product_scroll'),
+            Button(text=Format('{current_page}'), id='current_page_button'),
             NextPage(scroll='product_scroll', when=F['current_page'] != F['pages'] - 1),
             FirstPage(scroll='product_scroll', text=Const('>'), when=F['current_page'] == F['pages'] - 1),
             when=F['pages'] > 1,
