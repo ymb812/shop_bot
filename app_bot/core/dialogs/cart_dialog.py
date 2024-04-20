@@ -2,12 +2,13 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.media import DynamicMedia
-from aiogram_dialog.widgets.kbd import Back, Button, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import Start, Button, Select, SwitchTo
 from aiogram_dialog.widgets.input import TextInput
 from core.dialogs.custom_content import CustomPager
 from core.dialogs.getters import get_products_by_user, get_product_data, get_order_data
 from core.dialogs.callbacks import CallBackHandler
-from core.states.dialogs import CartStateGroup
+from core.states.cart import CartStateGroup
+from core.states.main_menu import MainMenuStateGroup
 from core.utils.texts import _
 from settings import settings
 
@@ -15,61 +16,94 @@ from settings import settings
 cart_dialog = Dialog(
     # products by cart
     Window(
-        Const(text=_('PRODUCTS_IN_CART')),
+        Const(text=_('PRODUCTS_IN_CART'), when=F['products']),
+        Const(text=_('CART_IS_EMPTY'), when=~F['products']),
         CustomPager(
             Select(
                 id='_products_in_cart_select',
                 items='products',
                 item_id_getter=lambda item: item.id,
                 text=Format(text='{item.name}'),
-                on_click=CallBackHandler.selected_content,
+                on_click=CallBackHandler.selected_product,
             ),
             id='products_by_cart_group',
-            height=settings.products_per_page_height,
-            width=settings.products_per_page_width,
+            height=settings.categories_per_page_height,
+            width=settings.categories_per_page_width,
             hide_on_single_page=True,
         ),
-        SwitchTo(Const(text=_('CREATE_ORDER_BUTTON')), id='switch_to_delivery', state=CartStateGroup.delivery),
+        SwitchTo(Const(text=_('CREATE_ORDER_BUTTON')), id='switch_to_fio', state=CartStateGroup.input_fio,
+                 when=F['products']),
+        Start(Const(text=_('BACK_BUTTON')), id='go_to_menu', state=MainMenuStateGroup.menu),
         getter=get_products_by_user,
         state=CartStateGroup.products,
     ),
 
+
     # products interactions
     Window(
         DynamicMedia(selector='media_content'),
-        Format(text=_('PRODUCT_PAGE',
-                      product_name='{product.name}',
-                      product_description='{product.description}',
-                      product_price='{product.price}')
-               ),
+        Format(text=_(
+            text='PRODUCT_PAGE',
+            name='{product.name}',
+            description='{product.description}',
+            price='{product.price}',
+        )),
         Button(Const(text=_('DELETE_BUTTON')), id='delete_from_cart', on_click=CallBackHandler.delete_from_cart),
-        Back(Const(text=_('BACK_BUTTON'))),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_cart', state=CartStateGroup.products),
         getter=get_product_data,
         state=CartStateGroup.product_interaction,
     ),
 
-    # input delivery data
+
+    # input fio
     Window(
-        Const(text=_('INPUT_DELIVERY_DATA')),
+        Const(text=_('INPUT_FIO')),
         TextInput(
-            id='delivery_data',
+            id='input_fio',
             type_factory=str,
-            on_success=CallBackHandler.get_delivery_data
+            on_success=CallBackHandler.input_order_data
         ),
-        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_delivery', state=CartStateGroup.products),
-        state=CartStateGroup.delivery,
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_products', state=CartStateGroup.products),
+        state=CartStateGroup.input_fio,
     ),
 
-    # payment
+
+    # input phone
+    Window(
+        Const(text=_('INPUT_PHONE')),
+        TextInput(
+            id='input_phone',
+            type_factory=str,
+            on_success=CallBackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_fio', state=CartStateGroup.input_fio),
+        state=CartStateGroup.input_phone,
+    ),
+
+
+    # input address
+    Window(
+        Const(text=_('INPUT_ADDRESS')),
+        TextInput(
+            id='input_address',
+            type_factory=str,
+            on_success=CallBackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_phone', state=CartStateGroup.input_phone),
+        state=CartStateGroup.input_address,
+    ),
+
+
+    # confirm order
     Window(
         Format(text=_('CONFIRM_ORDER',
                       product_types_amount='{product_types_amount}',
                       product_amount='{product_amount}',
                       total_price='{total_price}')
                ),
-        Button(Const(text=_('PAY_BUTTON')), id='pay_order', on_click=CallBackHandler.order_payment),
-        Back(Const(text=_('BACK_BUTTON'))),
+        Button(Const(text=_('CONFIRM_BUTTON')), id='create_order', on_click=CallBackHandler.create_order),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_address', state=CartStateGroup.input_address),
         getter=get_order_data,
-        state=CartStateGroup.payment,
+        state=CartStateGroup.confirm,
     ),
 )

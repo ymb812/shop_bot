@@ -107,10 +107,19 @@ class UserProduct(Model):
 
 
     @classmethod
-    async def add_cart_to_order(cls, user_id: int, order_id: uuid.UUID):
+    async def add_cart_to_order(cls, user_id: int, order_id: uuid.UUID) -> str:
+        products = ''
         for product in await UserProduct.filter(user_id=user_id, order_id=None).all():
             product.order_id = order_id
             await product.save()
+
+            # product data for order
+            product_data: Product = await product.product
+            products += f'ID: {product_data.id}\n' \
+                        f'Название: {product_data.name}\n' \
+                        f'Количество: {product.amount}\n\n'
+
+        return products
 
 
 class Order(Model):
