@@ -68,12 +68,19 @@ async def get_product_info_data(product: Product):
     }
 
 
-async def get_products_by_user(**kwargs) -> dict[str, list[UserProduct]]:
+async def get_products_by_user(**kwargs) -> dict[str, list[Product]]:
     user_id = kwargs['event_from_user'].id
-    products = await UserProduct.get_user_cart(user_id=user_id)
+    user_products: list[UserProduct] = await UserProduct.get_user_cart(user_id=user_id, return_products=False)
+
+    products = []
+    product_amount, total_price = 0, 0
+    for user_product in user_products:
+        products.append(await user_product.product)
+        total_price += (await user_product.product).price * user_product.amount
 
     return {
-        'products': products
+        'products': products,
+        'total_price': total_price,
     }
 
 

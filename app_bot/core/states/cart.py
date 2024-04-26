@@ -6,6 +6,13 @@ class CartStateGroup(StatesGroup):
     product_interaction = State()
     input_fio = State()
     input_phone = State()
-    input_address = State()
-    confirm = State()
 
+    input_city = State()
+    input_street = State()
+    input_house = State()
+    input_index = State()
+    input_entrance = State()
+    input_floor = State()
+    input_flat = State()
+
+    confirm = State()
