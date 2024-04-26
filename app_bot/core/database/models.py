@@ -100,10 +100,10 @@ class UserProduct(Model):
     # return Product for cart display or return UserProduct for order creating
     @classmethod
     async def get_user_cart(cls, user_id: int, return_products: bool = True) -> list[Product or "UserProduct"]:
-        if return_products:
+        if return_products:  # Product
             return [await product.product for product in await cls.filter(user_id=user_id, order_id=None).all()]
 
-        return [product for product in await cls.filter(user_id=user_id, order_id=None).all()]
+        return [product for product in await cls.filter(user_id=user_id, order_id=None).all()]  # UserProduct
 
 
     @classmethod

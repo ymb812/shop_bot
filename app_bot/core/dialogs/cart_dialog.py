@@ -16,7 +16,7 @@ from settings import settings
 cart_dialog = Dialog(
     # products by cart
     Window(
-        Const(text=_('PRODUCTS_IN_CART'), when=F['products']),
+        Format(text=_('PRODUCTS_IN_CART', total_price='{total_price}'), when=F['products']),
         Const(text=_('CART_IS_EMPTY'), when=~F['products']),
         CustomPager(
             Select(
@@ -82,16 +82,92 @@ cart_dialog = Dialog(
     ),
 
 
-    # input address
+    # input_city
     Window(
-        Const(text=_('INPUT_ADDRESS')),
+        Const(text=_('INPUT_CITY')),
         TextInput(
-            id='input_address',
+            id='input_city',
             type_factory=str,
             on_success=ProductsCallbackHandler.input_order_data
         ),
         SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_phone', state=CartStateGroup.input_phone),
-        state=CartStateGroup.input_address,
+        state=CartStateGroup.input_city,
+    ),
+
+    # input_street
+    Window(
+        Const(text=_('INPUT_STREET')),
+        TextInput(
+            id='input_street',
+            type_factory=str,
+            on_success=ProductsCallbackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_city', state=CartStateGroup.input_city),
+        state=CartStateGroup.input_street,
+    ),
+
+    # input_house
+    Window(
+        Const(text=_('INPUT_HOUSE')),
+        TextInput(
+            id='input_house',
+            type_factory=str,
+            on_success=ProductsCallbackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_street', state=CartStateGroup.input_street),
+        state=CartStateGroup.input_house,
+    ),
+
+    # input_index
+    Window(
+        Const(text=_('INPUT_INDEX')),
+        TextInput(
+            id='input_index',
+            type_factory=str,
+            on_success=ProductsCallbackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('SKIP_BUTTON')), id='switch_to_entrance', state=CartStateGroup.input_entrance),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_house', state=CartStateGroup.input_house),
+        state=CartStateGroup.input_index,
+    ),
+
+    # input_entrance
+    Window(
+        Const(text=_('INPUT_ENTRANCE')),
+        TextInput(
+            id='input_entrance',
+            type_factory=str,
+            on_success=ProductsCallbackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('SKIP_BUTTON')), id='switch_to_floor', state=CartStateGroup.input_floor),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_index', state=CartStateGroup.input_index),
+        state=CartStateGroup.input_entrance,
+    ),
+
+    # input_floor
+    Window(
+        Const(text=_('INPUT_FLOOR')),
+        TextInput(
+            id='input_floor',
+            type_factory=str,
+            on_success=ProductsCallbackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('SKIP_BUTTON')), id='switch_to_flat', state=CartStateGroup.input_flat),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_entrance', state=CartStateGroup.input_entrance),
+        state=CartStateGroup.input_floor,
+    ),
+
+    # input_floor
+    Window(
+        Const(text=_('INPUT_FLAT')),
+        TextInput(
+            id='input_flat',
+            type_factory=str,
+            on_success=ProductsCallbackHandler.input_order_data
+        ),
+        SwitchTo(Const(text=_('SKIP_BUTTON')), id='switch_to_confirm', state=CartStateGroup.confirm),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_floor', state=CartStateGroup.input_floor),
+        state=CartStateGroup.input_flat,
     ),
 
 
@@ -103,7 +179,7 @@ cart_dialog = Dialog(
                       total_price='{total_price}')
                ),
         Button(Const(text=_('CONFIRM_BUTTON')), id='create_order', on_click=ProductsCallbackHandler.create_order),
-        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_address', state=CartStateGroup.input_address),
+        SwitchTo(Const(text=_('BACK_BUTTON')), id='switch_to_flat', state=CartStateGroup.input_flat),
         getter=get_order_data,
         state=CartStateGroup.confirm,
     ),

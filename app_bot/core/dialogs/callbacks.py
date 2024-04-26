@@ -126,10 +126,36 @@ class ProductsCallbackHandler:
 
         elif widget.widget.widget_id == 'input_phone':
             dialog_manager.dialog_data['phone'] = value
-            await dialog_manager.switch_to(CartStateGroup.input_address)
+            await dialog_manager.switch_to(CartStateGroup.input_city)
 
-        elif widget.widget.widget_id == 'input_address':
-            dialog_manager.dialog_data['address'] = value
+        # start address states
+        elif widget.widget.widget_id == 'input_city':
+            dialog_manager.dialog_data['address'] = f'{value} '
+            await dialog_manager.switch_to(CartStateGroup.input_street)
+
+        elif widget.widget.widget_id == 'input_street':
+            dialog_manager.dialog_data['address'] += f'{value} '
+            await dialog_manager.switch_to(CartStateGroup.input_house)
+
+        elif widget.widget.widget_id == 'input_house':
+            dialog_manager.dialog_data['address'] += f'{value} '
+            await dialog_manager.switch_to(CartStateGroup.input_index)
+
+        elif widget.widget.widget_id == 'input_index':
+            dialog_manager.dialog_data['address'] += f'{value} '
+            await dialog_manager.switch_to(CartStateGroup.input_entrance)
+
+        elif widget.widget.widget_id == 'input_entrance':
+            dialog_manager.dialog_data['address'] += f'{value} '
+            await dialog_manager.switch_to(CartStateGroup.input_floor)
+
+        elif widget.widget.widget_id == 'input_floor':
+            dialog_manager.dialog_data['address'] += f'{value} '
+            await dialog_manager.switch_to(CartStateGroup.input_flat)
+
+        # end of address states
+        elif widget.widget.widget_id == 'input_flat':
+            dialog_manager.dialog_data['address'] += f'{value} '
             await dialog_manager.switch_to(CartStateGroup.confirm)
 
 
