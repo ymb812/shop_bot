@@ -249,7 +249,10 @@ msgstr "ℹ️ Рассылка завершена\n\n"
 msgid "PRODUCT_PAGE"
 msgstr "<b>{name}</b>\n"
 "<b>Цена:</b> {price}р\n\n"
-"{description}"
+
+"{description}\n\n"
+
+"<i>{comment}</i>"
 
 
 msgid "PRODUCT_CART_PAGE"
@@ -257,7 +260,9 @@ msgstr "<b>{name}</b>\n\n"
 "Цена за штуку: {price}р\n"
 "Количество: {amount}\n\n"
 
-"{description}"
+"{description}\n\n"
+
+"<i>{comment}</i>"
 
 
 msgid "CONFIRM_ORDER"

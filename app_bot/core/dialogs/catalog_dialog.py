@@ -45,6 +45,7 @@ catalog_dialog = Dialog(
             text='PRODUCT_PAGE',
             name='{product.name}',
             description='{product.description}',
+            comment='{product.comment}',
             price='{product.price}',
         )),
         StubScroll(id='product_scroll', pages='pages'),

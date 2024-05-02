@@ -69,6 +69,7 @@ class Product(Model):
     id = fields.IntField(pk=True, index=True)
     name = fields.CharField(max_length=64)
     description = fields.CharField(max_length=2048)
+    comment = fields.CharField(max_length=2048, null=True, default='')
     price = fields.IntField()
     media_content = fields.CharField(max_length=256, null=True)
     category = fields.ForeignKeyField(model_name='models.Category', to_field='id', null=True)
