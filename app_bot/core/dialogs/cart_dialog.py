@@ -46,6 +46,7 @@ cart_dialog = Dialog(
             text='PRODUCT_CART_PAGE',
             name='{product.name}',
             description='{product.description}',
+            comment='{product.comment}',
             price='{product.price}',
             amount='{product_amount}',
         )),

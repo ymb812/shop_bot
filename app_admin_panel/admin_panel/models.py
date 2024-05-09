@@ -50,7 +50,8 @@ class Product(models.Model):
 
     id = models.AutoField(primary_key=True, db_index=True)
     name = models.CharField(max_length=64)
-    description = models.CharField(max_length=2048)
+    description = models.TextField()
+    comment = models.TextField(null=True, default='', blank=True)
     price = models.IntegerField()
     media_content = models.CharField(max_length=256, null=True, blank=True)
     category = models.ForeignKey('Category', to_field='id', on_delete=models.SET_NULL, null=True)
