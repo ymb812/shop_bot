@@ -26,7 +26,7 @@ SECRET_KEY = settings.secret_key.get_secret_value()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = settings.debug_mode
 
-ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0', 'localhost', 'host.docker.internal', '92.63.101.38']
+ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0', 'localhost', 'host.docker.internal', '82.146.48.111']
 
 # Application definition
 
